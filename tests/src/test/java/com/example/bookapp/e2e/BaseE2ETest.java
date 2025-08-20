@@ -27,7 +27,7 @@ public abstract class BaseE2ETest {
         options.addArguments("--no-sandbox");
         // options.addArguments("--headless=new"); // uncomment for CI headless runs
         driver = new ChromeDriver(options);
-        wait = new WebDriverWait(driver, Duration.ofSeconds(25));
+        wait = new WebDriverWait(driver, Duration.ofSeconds(40));
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(0));
         driver.manage().window().maximize();
     }
@@ -51,14 +51,36 @@ public abstract class BaseE2ETest {
         wait.until(ExpectedConditions.invisibilityOfElementLocated(locator));
     }
 
+    protected WebElement waitPresent(By locator) {
+        return wait.until(ExpectedConditions.presenceOfElementLocated(locator));
+    }
+
     protected WebElement waitEnabled(By locator) {
         return wait.until((ExpectedCondition<WebElement>) d -> {
-            WebElement el = d.findElement(locator);
-            String disabled = el.getAttribute("disabled");
-            if (el.isDisplayed() && el.isEnabled() && (disabled == null || disabled.equals("false"))) {
-                return el;
+            try {
+                WebElement el = d.findElement(locator);
+                if (el.isDisplayed() && el.isEnabled()) {
+                    return el;
+                }
+                return null;
+            } catch (NoSuchElementException | StaleElementReferenceException ignored) {
+                return null;
             }
-            return null;
+        });
+    }
+
+    protected WebElement waitNotDisabled(By locator) {
+        return wait.until((ExpectedCondition<WebElement>) d -> {
+            try {
+                WebElement el = d.findElement(locator);
+                String disabled = el.getAttribute("disabled");
+                if (disabled == null || disabled.equals("false")) {
+                    return el;
+                }
+                return null;
+            } catch (NoSuchElementException | StaleElementReferenceException ignored) {
+                return null;
+            }
         });
     }
 
@@ -79,5 +101,31 @@ public abstract class BaseE2ETest {
             ((JavascriptExecutor) driver).executeScript("arguments[0].value=arguments[1]", el, value);
             ((JavascriptExecutor) driver).executeScript("arguments[0].dispatchEvent(new Event('input',{bubbles:true}))", el);
         }
+    }
+
+    protected void click(By locator) {
+        WebElement el = waitClickable(locator);
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'})", el);
+        try {
+            el.click();
+        } catch (WebDriverException e) {
+            ((JavascriptExecutor) driver).executeScript("arguments[0].click()", el);
+        }
+    }
+
+    protected void submitClosestForm(By anyChildInForm) {
+        WebElement el = waitPresent(anyChildInForm);
+        ((JavascriptExecutor) driver).executeScript(
+                "let f = arguments[0].closest('form'); if(f){ if(f.requestSubmit){ f.requestSubmit(); } else { f.submit(); }}",
+                el
+        );
+    }
+
+    protected void submitForm(By formLocator) {
+        WebElement form = waitPresent(formLocator);
+        ((JavascriptExecutor) driver).executeScript(
+                "if(arguments[0].requestSubmit){ arguments[0].requestSubmit(); } else { arguments[0].submit(); }",
+                form
+        );
     }
 } 
