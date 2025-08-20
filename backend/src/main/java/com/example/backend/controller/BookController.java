@@ -1,43 +1,49 @@
 package com.example.backend.controller;
 
 import com.example.backend.model.Book;
-import com.example.backend.repository.BookRepository;
+import com.example.backend.service.BookService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/books")
+@RequestMapping("/api/books")
+@CrossOrigin(origins = "http://localhost:3000")
 public class BookController {
 
     @Autowired
-    private BookRepository bookRepo;
+    private BookService bookService;
 
     @GetMapping
-    public List<Book> getAllBooks() {
-        return bookRepo.findAll();
+    public ResponseEntity<List<Book>> getAllBooks() {
+            List<Book> books = bookService.getAllBooks();
+            return ResponseEntity.ok(books);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Book> getBookById(@PathVariable Long id) {
+            return bookService.getBookById(id)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public Book addBook(@RequestBody Book book) {
-        return bookRepo.save(book);
+    public ResponseEntity<Book> createBook(@RequestBody Book book) {
+            Book savedBook = bookService.saveBook(book);
+            return ResponseEntity.ok(savedBook);
     }
 
     @PutMapping("/{id}")
-    public Book updateBook(@PathVariable Long id, @RequestBody Book updatedBook) {
-        return bookRepo.findById(id).map(book -> {
-            book.setTitle(updatedBook.getTitle());
-            book.setAuthor(updatedBook.getAuthor());
-            book.setDescription(updatedBook.getDescription());
-            book.setIsbn(updatedBook.getIsbn());
-            book.setPublishedDate(updatedBook.getPublishedDate());
-            return bookRepo.save(book);
-        }).orElseThrow(() -> new RuntimeException("Book not found"));
+    public ResponseEntity<Book> updateBook(@PathVariable Long id, @RequestBody Book book) {
+        Book updatedBook = bookService.updateBook(id, book);
+        return ResponseEntity.ok(updatedBook);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteBook(@PathVariable Long id) {
-        bookRepo.deleteById(id);
+    public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
+            bookService.deleteBook(id);
+            return ResponseEntity.ok().build();
     }
 }

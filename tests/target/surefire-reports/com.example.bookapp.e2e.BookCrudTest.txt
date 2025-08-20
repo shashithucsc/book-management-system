@@ -1,0 +1,21 @@
+-------------------------------------------------------------------------------
+Test set: com.example.bookapp.e2e.BookCrudTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 31.21 s <<< FAILURE! -- in com.example.bookapp.e2e.BookCrudTest
+com.example.bookapp.e2e.BookCrudTest.shouldCreateUpdateAndDeleteBook -- Time elapsed: 31.21 s <<< ERROR!
+org.openqa.selenium.TimeoutException: 
+Expected condition failed: waiting for com.example.bookapp.e2e.BaseE2ETest$$Lambda/0x0000024989250b50@5649d11a (tried for 25 second(s) with 500 milliseconds interval)
+Build info: version: '4.23.0', revision: '4df0a231af'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '22.0.1'
+Driver info: org.openqa.selenium.chrome.ChromeDriver
+Capabilities {acceptInsecureCerts: false, browserName: chrome, browserVersion: 139.0.7258.128, chrome: {chromedriverVersion: 139.0.7258.138 (884e54ea8d4..., userDataDir: C:\Users\Shashith\AppData\L...}, fedcm:accounts: true, goog:chromeOptions: {debuggerAddress: localhost:2153}, networkConnectionEnabled: false, pageLoadStrategy: normal, platformName: windows, proxy: Proxy(), se:cdp: ws://localhost:2153/devtool..., se:cdpVersion: 139.0.7258.128, setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify, webauthn:extension:credBlob: true, webauthn:extension:largeBlob: true, webauthn:extension:minPinLength: true, webauthn:extension:prf: true, webauthn:virtualAuthenticators: true}
+Session ID: a728d22ccbb51acdfd543b52f4b603fe
+	at org.openqa.selenium.support.ui.WebDriverWait.timeoutException(WebDriverWait.java:84)
+	at org.openqa.selenium.support.ui.FluentWait.until(FluentWait.java:228)
+	at com.example.bookapp.e2e.BaseE2ETest.waitEnabled(BaseE2ETest.java:55)
+	at com.example.bookapp.e2e.BaseE2ETest.setInput(BaseE2ETest.java:70)
+	at com.example.bookapp.e2e.BookCrudTest.shouldCreateUpdateAndDeleteBook(BookCrudTest.java:67)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+

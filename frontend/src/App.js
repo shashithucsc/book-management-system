@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
 import './App.css';
-import Login from './components/Login';
 import BookManager from './components/BookManager';
+import Auth from './components/Auth';
 
 function App() {
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [user, setUser] = useState(null);
+
   return (
     <div className="App">
-      {loggedIn ? <BookManager /> : <Login onLogin={setLoggedIn} />}
+      {user ? (
+        <BookManager />
+      ) : (
+        <Auth onAuth={setUser} />
+      )}
     </div>
   );
 }

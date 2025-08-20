@@ -1,0 +1,3 @@
+com\example\bookapp\e2e\BaseE2ETest.class
+com\example\bookapp\e2e\BookCrudTest.class
+com\example\bookapp\e2e\AuthFlowTest.class

@@ -3,9 +3,17 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './BookManager.css';
 
+const API_BASE_URL = 'http://localhost:8081/api';
+
 export default function BookManager() {
   const [books, setBooks] = useState([]);
-  const [form, setForm] = useState({ title: '', author: '', description: '', isbn: '', published_date: '' });
+  const [form, setForm] = useState({ 
+    title: '', 
+    author: '', 
+    description: '', 
+    isbn: '', 
+    year: '' 
+  });
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -17,68 +25,80 @@ export default function BookManager() {
   const fetchBooks = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('http://localhost:8081/books');
-      setBooks(res.data);
-    } catch (e) {
+      const response = await axios.get(`${API_BASE_URL}/books`);
+      setBooks(response.data);
+      setError('');
+    } catch (err) {
       setError('Failed to fetch books');
+      console.error('Error fetching books:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChange = e => {
+  const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    
     try {
-      // Map published_date to publishedDate for backend compatibility
-      const payload = { ...form, publishedDate: form.published_date };
-      delete payload.published_date;
+      const payload = {
+        ...form,
+        year: form.year ? parseInt(form.year) : null
+      };
+
       if (editingId) {
-        await axios.put(`http://localhost:8081/books/${editingId}`, payload);
+        await axios.put(`${API_BASE_URL}/books/${editingId}`, payload);
       } else {
-        await axios.post('http://localhost:8081/books', payload);
+        await axios.post(`${API_BASE_URL}/books`, payload);
       }
-      setForm({ title: '', author: '', description: '', isbn: '', published_date: '' });
+      
+      setForm({ title: '', author: '', description: '', isbn: '', year: '' });
       setEditingId(null);
-      fetchBooks();
-    } catch (e) {
+      await fetchBooks();
+    } catch (err) {
       setError('Failed to save book');
+      console.error('Error saving book:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEdit = book => {
+  const handleEdit = (book) => {
     setForm({
       title: book.title || '',
       author: book.author || '',
       description: book.description || '',
       isbn: book.isbn || '',
-      published_date: book.publishedDate ? book.publishedDate.substring(0, 10) : ''
+      year: book.year ? book.year.toString() : ''
     });
     setEditingId(book.id);
   };
 
-  const handleDelete = async id => {
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this book?')) {
+      return;
+    }
+    
     setLoading(true);
     setError('');
     try {
-      await axios.delete(`http://localhost:8081/books/${id}`);
-      fetchBooks();
-    } catch (e) {
+      await axios.delete(`${API_BASE_URL}/books/${id}`);
+      await fetchBooks();
+    } catch (err) {
       setError('Failed to delete book');
+      console.error('Error deleting book:', err);
     } finally {
       setLoading(false);
     }
   };
 
   const handleCancel = () => {
-    setForm({ title: '', author: '', description: '', isbn: '', published_date: '' });
+    setForm({ title: '', author: '', description: '', isbn: '', year: '' });
     setEditingId(null);
     setError('');
   };
@@ -86,56 +106,104 @@ export default function BookManager() {
   return (
     <div className="book-manager-container">
       <div className="book-manager-card">
-        <h2>Book List</h2>
+        <h1>📚 Book Management System</h1>
+        
         <form className="book-form" onSubmit={handleSubmit}>
           {error && <div className="error-message">{error}</div>}
+          
           <div className="form-row">
-            <input name="title" value={form.title} onChange={handleChange} placeholder="Title" required disabled={loading} />
-            <input name="author" value={form.author} onChange={handleChange} placeholder="Author" required disabled={loading} />
+            <input 
+              name="title" 
+              value={form.title} 
+              onChange={handleChange} 
+              placeholder="Book Title" 
+              required 
+              disabled={loading} 
+            />
+            <input 
+              name="author" 
+              value={form.author} 
+              onChange={handleChange} 
+              placeholder="Author" 
+              required 
+              disabled={loading} 
+            />
           </div>
+          
           <div className="form-row">
-            <input name="isbn" value={form.isbn} onChange={handleChange} placeholder="ISBN" disabled={loading} />
-            <input name="published_date" type="date" value={form.published_date} onChange={handleChange} placeholder="Published Date" disabled={loading} />
+            <input 
+              name="isbn" 
+              value={form.isbn} 
+              onChange={handleChange} 
+              placeholder="ISBN" 
+              disabled={loading} 
+            />
+            <input 
+              name="year" 
+              type="number" 
+              value={form.year} 
+              onChange={handleChange} 
+              placeholder="Publication Year" 
+              min="1900" 
+              max="2024"
+              disabled={loading} 
+            />
           </div>
-          <textarea name="description" value={form.description} onChange={handleChange} placeholder="Description" disabled={loading} />
+          
+          <textarea 
+            name="description" 
+            value={form.description} 
+            onChange={handleChange} 
+            placeholder="Book Description" 
+            disabled={loading} 
+          />
+          
           <div className="form-actions">
-            <button type="submit" className="book-btn" disabled={loading}>
+            <button type="submit" className="book-btn primary" disabled={loading}>
               {editingId ? 'Update Book' : 'Add Book'}
             </button>
-            {editingId && <button type="button" className="book-btn cancel" onClick={handleCancel} disabled={loading}>Cancel</button>}
+            {editingId && (
+              <button type="button" className="book-btn cancel" onClick={handleCancel} disabled={loading}>
+                Cancel
+              </button>
+            )}
           </div>
         </form>
+
         <div className="book-list">
-          {loading ? <div>Loading...</div> : (
-            books.length === 0 ? <div>No books found.</div> : (
-              <table className="book-table">
-                <thead>
-                  <tr>
-                    <th>Title</th>
-                    <th>Author</th>
-                    <th>ISBN</th>
-                    <th>Published</th>
-                    <th>Description</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {books.map(book => (
-                    <tr key={book.id}>
-                      <td>{book.title}</td>
-                      <td>{book.author}</td>
-                      <td>{book.isbn}</td>
-                      <td>{book.publishedDate ? book.publishedDate.substring(0, 10) : ''}</td>
-                      <td>{book.description}</td>
-                      <td>
-                        <button className="book-btn edit" onClick={() => handleEdit(book)} disabled={loading}>Edit</button>
-                        <button className="book-btn delete" onClick={() => handleDelete(book.id)} disabled={loading}>Delete</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )
+          <h2>📖 Book Collection</h2>
+          {loading ? (
+            <div className="loading">Loading books...</div>
+          ) : books.length === 0 ? (
+            <div className="no-books">No books found. Add your first book above!</div>
+          ) : (
+            <div className="books-grid">
+              {books.map(book => (
+                <div key={book.id} className="book-card">
+                  <h3>{book.title}</h3>
+                  <p><strong>Author:</strong> {book.author}</p>
+                  {book.isbn && <p><strong>ISBN:</strong> {book.isbn}</p>}
+                  {book.year && <p><strong>Year:</strong> {book.year}</p>}
+                  {book.description && <p><strong>Description:</strong> {book.description}</p>}
+                  <div className="book-actions">
+                    <button 
+                      className="book-btn edit" 
+                      onClick={() => handleEdit(book)} 
+                      disabled={loading}
+                    >
+                      Edit
+                    </button>
+                    <button 
+                      className="book-btn delete" 
+                      onClick={() => handleDelete(book.id)} 
+                      disabled={loading}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>
